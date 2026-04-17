@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      flow_measurements: {
+        Row: {
+          apartment_number: string | null
+          created_at: string
+          floor: string | null
+          id: string
+          inspection_id: string
+          notes: string | null
+          rooms: Json
+          sort_order: number
+          system_number: string | null
+          tenant_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          apartment_number?: string | null
+          created_at?: string
+          floor?: string | null
+          id?: string
+          inspection_id: string
+          notes?: string | null
+          rooms?: Json
+          sort_order?: number
+          system_number?: string | null
+          tenant_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          apartment_number?: string | null
+          created_at?: string
+          floor?: string | null
+          id?: string
+          inspection_id?: string
+          notes?: string | null
+          rooms?: Json
+          sort_order?: number
+          system_number?: string | null
+          tenant_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_measurements_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inspections: {
         Row: {
           activity: string | null

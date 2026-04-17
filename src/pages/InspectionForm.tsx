@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { FlowMeasurements } from "@/components/FlowMeasurements";
 
 type FormState = Record<string, any>;
 
@@ -40,6 +41,8 @@ const InspectionForm = () => {
   const isNew = !id || id === "new";
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(isNew ? null : id ?? null);
+  const [userId, setUserId] = useState<string>("");
   const [form, setForm] = useState<FormState>({
     all_systems_included: true,
     inspection_date: new Date().toISOString().slice(0, 10),
@@ -53,6 +56,7 @@ const InspectionForm = () => {
       // Prefill inspector fields from profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setUserId(user.id);
       const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
 
       if (!isNew && id) {
@@ -95,24 +99,25 @@ const InspectionForm = () => {
     dateFields.forEach((f) => { if (payload[f] === "") payload[f] = null; });
     payload.status = sendEmail ? "sent" : (form.status === "sent" ? "sent" : "completed");
 
-    let savedId = id;
-    if (isNew) {
+    let newId = savedId ?? id ?? null;
+    if (!newId || isNew && !savedId) {
       const { data, error } = await supabase.from("inspections").insert(payload).select("id").single();
       if (error) { toast.error(error.message); setSaving(false); return; }
-      savedId = data.id;
+      newId = data.id;
+      setSavedId(newId);
     } else {
-      const { error } = await supabase.from("inspections").update(payload).eq("id", id!);
+      const { error } = await supabase.from("inspections").update(payload).eq("id", newId);
       if (error) { toast.error(error.message); setSaving(false); return; }
     }
 
     if (sendEmail) {
-      // Placeholder: e-post implementeras i steg 2
       toast.success("Sparat. E-postutskick aktiveras i nästa steg.");
+      setSaving(false);
+      navigate("/");
     } else {
-      toast.success("Sparat");
+      toast.success("Sparat – du kan nu lägga till luftflöden");
+      setSaving(false);
     }
-    setSaving(false);
-    navigate("/");
   };
 
   if (loading) return <AppLayout><div className="text-center py-12 text-muted-foreground">Laddar...</div></AppLayout>;
@@ -214,6 +219,8 @@ const InspectionForm = () => {
           <Field label="Mottagarens namn" id="rn"><Input id="rn" value={form.recipient_name ?? ""} onChange={(e) => set("recipient_name", e.target.value)} /></Field>
           <Field label="Mottagarens e-post" id="re"><Input id="re" type="email" value={form.recipient_email ?? ""} onChange={(e) => set("recipient_email", e.target.value)} /></Field>
         </Section>
+
+        <FlowMeasurements inspectionId={savedId} userId={userId} />
 
         <div className="flex flex-wrap gap-3 justify-end sticky bottom-4 bg-background/80 backdrop-blur p-3 rounded-lg border border-border shadow-[var(--shadow-elevated)]">
           <Button variant="outline" onClick={() => navigate("/")} disabled={saving}>Avbryt</Button>
