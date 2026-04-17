@@ -41,6 +41,8 @@ const InspectionForm = () => {
   const isNew = !id || id === "new";
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(isNew ? null : id ?? null);
+  const [userId, setUserId] = useState<string>("");
   const [form, setForm] = useState<FormState>({
     all_systems_included: true,
     inspection_date: new Date().toISOString().slice(0, 10),
