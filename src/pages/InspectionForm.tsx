@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { FlowMeasurements } from "@/components/FlowMeasurements";
 
 type FormState = Record<string, any>;
 
