@@ -220,6 +220,8 @@ const InspectionForm = () => {
           <Field label="Mottagarens e-post" id="re"><Input id="re" type="email" value={form.recipient_email ?? ""} onChange={(e) => set("recipient_email", e.target.value)} /></Field>
         </Section>
 
+        <FlowMeasurements inspectionId={savedId} userId={userId} />
+
         <div className="flex flex-wrap gap-3 justify-end sticky bottom-4 bg-background/80 backdrop-blur p-3 rounded-lg border border-border shadow-[var(--shadow-elevated)]">
           <Button variant="outline" onClick={() => navigate("/")} disabled={saving}>Avbryt</Button>
           <Button variant="secondary" onClick={() => save(false)} disabled={saving}>
