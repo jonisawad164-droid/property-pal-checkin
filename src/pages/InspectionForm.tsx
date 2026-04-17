@@ -99,24 +99,25 @@ const InspectionForm = () => {
     dateFields.forEach((f) => { if (payload[f] === "") payload[f] = null; });
     payload.status = sendEmail ? "sent" : (form.status === "sent" ? "sent" : "completed");
 
-    let savedId = id;
-    if (isNew) {
+    let newId = savedId ?? id ?? null;
+    if (!newId || isNew && !savedId) {
       const { data, error } = await supabase.from("inspections").insert(payload).select("id").single();
       if (error) { toast.error(error.message); setSaving(false); return; }
-      savedId = data.id;
+      newId = data.id;
+      setSavedId(newId);
     } else {
-      const { error } = await supabase.from("inspections").update(payload).eq("id", id!);
+      const { error } = await supabase.from("inspections").update(payload).eq("id", newId);
       if (error) { toast.error(error.message); setSaving(false); return; }
     }
 
     if (sendEmail) {
-      // Placeholder: e-post implementeras i steg 2
       toast.success("Sparat. E-postutskick aktiveras i nästa steg.");
+      setSaving(false);
+      navigate("/");
     } else {
-      toast.success("Sparat");
+      toast.success("Sparat – du kan nu lägga till luftflöden");
+      setSaving(false);
     }
-    setSaving(false);
-    navigate("/");
   };
 
   if (loading) return <AppLayout><div className="text-center py-12 text-muted-foreground">Laddar...</div></AppLayout>;
