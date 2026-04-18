@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Send } from "lucide-react";
+import { ArrowLeft, Save, Send, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { FlowMeasurements } from "@/components/FlowMeasurements";
+import { generateOvkPdf } from "@/lib/generatePdf";
 
 type FormState = Record<string, any>;
 
@@ -111,13 +112,35 @@ const InspectionForm = () => {
     }
 
     if (sendEmail) {
-      toast.success("Sparat. E-postutskick aktiveras i nästa steg.");
+      // Hämta luftflöden för PDF
+      const { data: flows } = await supabase
+        .from("flow_measurements")
+        .select("*")
+        .eq("inspection_id", newId!)
+        .order("sort_order", { ascending: true });
+      const pdf = generateOvkPdf(payload, (flows ?? []) as any);
+      const filename = `OVK_${(form.property_designation ?? "protokoll").toString().replace(/[^a-z0-9]/gi, "_")}.pdf`;
+      pdf.save(filename);
+      toast.success("PDF genererad och nedladdad. E-postutskick aktiveras när domän är konfigurerad.");
       setSaving(false);
-      navigate("/");
     } else {
       toast.success("Sparat – du kan nu lägga till luftflöden");
       setSaving(false);
     }
+  };
+
+  const previewPdf = async () => {
+    if (!savedId) {
+      toast.error("Spara protokollet först");
+      return;
+    }
+    const { data: flows } = await supabase
+      .from("flow_measurements")
+      .select("*")
+      .eq("inspection_id", savedId)
+      .order("sort_order", { ascending: true });
+    const pdf = generateOvkPdf(form, (flows ?? []) as any);
+    window.open(pdf.output("bloburl"), "_blank");
   };
 
   if (loading) return <AppLayout><div className="text-center py-12 text-muted-foreground">Laddar...</div></AppLayout>;
@@ -224,13 +247,17 @@ const InspectionForm = () => {
 
         <div className="flex flex-wrap gap-3 justify-end sticky bottom-4 bg-background/80 backdrop-blur p-3 rounded-lg border border-border shadow-[var(--shadow-elevated)]">
           <Button variant="outline" onClick={() => navigate("/")} disabled={saving}>Avbryt</Button>
+          <Button variant="outline" onClick={previewPdf} disabled={saving || !savedId}>
+            <FileText className="w-4 h-4 mr-2" />
+            Förhandsgranska PDF
+          </Button>
           <Button variant="secondary" onClick={() => save(false)} disabled={saving}>
             <Save className="w-4 h-4 mr-2" />
             Spara
           </Button>
-          <Button onClick={() => save(true)} disabled={saving || !form.recipient_email}>
+          <Button onClick={() => save(true)} disabled={saving}>
             <Send className="w-4 h-4 mr-2" />
-            Spara & skicka
+            Spara & generera PDF
           </Button>
         </div>
       </div>
