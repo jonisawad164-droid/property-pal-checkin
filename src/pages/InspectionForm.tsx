@@ -112,13 +112,35 @@ const InspectionForm = () => {
     }
 
     if (sendEmail) {
-      toast.success("Sparat. E-postutskick aktiveras i nästa steg.");
+      // Hämta luftflöden för PDF
+      const { data: flows } = await supabase
+        .from("flow_measurements")
+        .select("*")
+        .eq("inspection_id", newId!)
+        .order("sort_order", { ascending: true });
+      const pdf = generateOvkPdf(payload, (flows ?? []) as any);
+      const filename = `OVK_${(form.property_designation ?? "protokoll").toString().replace(/[^a-z0-9]/gi, "_")}.pdf`;
+      pdf.save(filename);
+      toast.success("PDF genererad och nedladdad. E-postutskick aktiveras när domän är konfigurerad.");
       setSaving(false);
-      navigate("/");
     } else {
       toast.success("Sparat – du kan nu lägga till luftflöden");
       setSaving(false);
     }
+  };
+
+  const previewPdf = async () => {
+    if (!savedId) {
+      toast.error("Spara protokollet först");
+      return;
+    }
+    const { data: flows } = await supabase
+      .from("flow_measurements")
+      .select("*")
+      .eq("inspection_id", savedId)
+      .order("sort_order", { ascending: true });
+    const pdf = generateOvkPdf(form, (flows ?? []) as any);
+    window.open(pdf.output("bloburl"), "_blank");
   };
 
   if (loading) return <AppLayout><div className="text-center py-12 text-muted-foreground">Laddar...</div></AppLayout>;
