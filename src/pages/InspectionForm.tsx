@@ -247,13 +247,17 @@ const InspectionForm = () => {
 
         <div className="flex flex-wrap gap-3 justify-end sticky bottom-4 bg-background/80 backdrop-blur p-3 rounded-lg border border-border shadow-[var(--shadow-elevated)]">
           <Button variant="outline" onClick={() => navigate("/")} disabled={saving}>Avbryt</Button>
+          <Button variant="outline" onClick={previewPdf} disabled={saving || !savedId}>
+            <FileText className="w-4 h-4 mr-2" />
+            Förhandsgranska PDF
+          </Button>
           <Button variant="secondary" onClick={() => save(false)} disabled={saving}>
             <Save className="w-4 h-4 mr-2" />
             Spara
           </Button>
-          <Button onClick={() => save(true)} disabled={saving || !form.recipient_email}>
+          <Button onClick={() => save(true)} disabled={saving}>
             <Send className="w-4 h-4 mr-2" />
-            Spara & skicka
+            Spara & generera PDF
           </Button>
         </div>
       </div>
