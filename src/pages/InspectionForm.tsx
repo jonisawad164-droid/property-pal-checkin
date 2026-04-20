@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { FlowMeasurements } from "@/components/FlowMeasurements";
 import { generateOvkPdf } from "@/lib/generatePdf";
+import { generateOvkIntyg } from "@/lib/generateIntyg";
 
 type FormState = Record<string, any>;
 
@@ -118,7 +119,7 @@ const InspectionForm = () => {
         .select("*")
         .eq("inspection_id", newId!)
         .order("sort_order", { ascending: true });
-      const pdf = generateOvkPdf(payload, (flows ?? []) as any);
+      const pdf = await generateOvkPdf(payload, (flows ?? []) as any);
       const filename = `OVK_${(form.property_designation ?? "protokoll").toString().replace(/[^a-z0-9]/gi, "_")}.pdf`;
       pdf.save(filename);
       toast.success("PDF genererad och nedladdad. E-postutskick aktiveras när domän är konfigurerad.");
@@ -139,8 +140,18 @@ const InspectionForm = () => {
       .select("*")
       .eq("inspection_id", savedId)
       .order("sort_order", { ascending: true });
-    const pdf = generateOvkPdf(form, (flows ?? []) as any);
+    const pdf = await generateOvkPdf(form, (flows ?? []) as any);
     window.open(pdf.output("bloburl"), "_blank");
+  };
+
+  const downloadIntyg = async () => {
+    if (!savedId) {
+      toast.error("Spara protokollet först");
+      return;
+    }
+    const pdf = await generateOvkIntyg(form);
+    const filename = `OVK_intyg_${(form.property_designation ?? "intyg").toString().replace(/[^a-z0-9]/gi, "_")}.pdf`;
+    pdf.save(filename);
   };
 
   if (loading) return <AppLayout><div className="text-center py-12 text-muted-foreground">Laddar...</div></AppLayout>;
@@ -249,7 +260,11 @@ const InspectionForm = () => {
           <Button variant="outline" onClick={() => navigate("/")} disabled={saving}>Avbryt</Button>
           <Button variant="outline" onClick={previewPdf} disabled={saving || !savedId}>
             <FileText className="w-4 h-4 mr-2" />
-            Förhandsgranska PDF
+            Förhandsgranska protokoll
+          </Button>
+          <Button variant="outline" onClick={downloadIntyg} disabled={saving || !savedId}>
+            <FileText className="w-4 h-4 mr-2" />
+            Ladda ner intyg
           </Button>
           <Button variant="secondary" onClick={() => save(false)} disabled={saving}>
             <Save className="w-4 h-4 mr-2" />
