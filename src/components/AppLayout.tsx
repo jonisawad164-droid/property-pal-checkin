@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Wind, LogOut, Plus, FileText } from "lucide-react";
+import { Wind, LogOut, Plus, FileText, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth";
+import { useRole } from "@/hooks/useRole";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -10,6 +11,7 @@ interface AppLayoutProps {
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
+  const { isAdmin } = useRole();
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,6 +40,14 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
                 <span className="hidden sm:inline">Nytt</span>
               </Link>
             </Button>
+            {isAdmin && (
+              <Button asChild variant={location.pathname === "/users" ? "secondary" : "ghost"} size="sm">
+                <Link to="/users">
+                  <UsersIcon className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Användare</span>
+                </Link>
+              </Button>
+            )}
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Logga ut</span>
